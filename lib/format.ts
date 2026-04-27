@@ -28,12 +28,33 @@ const MONTHS_LONG = [
   "prosinec",
 ];
 
+import type { Currency } from "@/types";
+
 const numberFormatter = new Intl.NumberFormat("cs-CZ", {
   maximumFractionDigits: 0,
 });
 
+const moneyFormatters: Record<Currency, Intl.NumberFormat> = {
+  CZK: new Intl.NumberFormat("cs-CZ", {
+    style: "currency",
+    currency: "CZK",
+    maximumFractionDigits: 0,
+  }),
+  EUR: new Intl.NumberFormat("de-DE", {
+    style: "currency",
+    currency: "EUR",
+    maximumFractionDigits: 0,
+  }),
+};
+
+export function formatMoney(value: number, currency: Currency | null): string {
+  const fmt = moneyFormatters[currency ?? "CZK"];
+  return fmt.format(Math.round(value));
+}
+
+/** @deprecated use formatMoney(value, "CZK") */
 export function formatCzk(value: number): string {
-  return `${numberFormatter.format(Math.round(value))} Kč`;
+  return formatMoney(value, "CZK");
 }
 
 export function formatNumber(value: number): string {

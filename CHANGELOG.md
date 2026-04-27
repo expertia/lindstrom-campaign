@@ -2,6 +2,57 @@
 
 Chronologický přehled změn projektu. Nejnovější nahoře.
 
+## 2026-04-27 — Multi-country support (CZ, SK, GER, AT)
+
+### Routing — breaking change
+
+- `/` → 308 redirect na `/cz`
+- `/[country]` → dashboard pro danou zemi (`cz`, `sk`, `ger`, `at`); ostatní → 404
+- `/[country]/kampan/[slug]` → detail kampaně, kde musí sedět zároveň země i slug
+- Stará URL `/kampan/[slug]` byla **odstraněna bez redirectu** (klient ji neměl rozeslanou)
+
+### Datový model
+
+- V sheetech přibyly sloupce: `Země` (všechny 4), `Měna` (Kampane + Nasazeni)
+- `Kampane.Země` a `Nasazeni.Země`: single value (CZ/SK/GER/AT)
+- `Specialiste.Země` a `Kreativy.Země`: multi-value (lze pracovat na víc trzích)
+- `Kampane.Měna` a `Nasazeni.Měna`: CZK / EUR (CZ+SK→CZK, GER+AT→EUR)
+- `parseCountry` / `parseCountries` validují podle whitelistu — neznámé hodnoty se ignorují (řádek se nezobrazí na žádném dashboardu)
+
+### UI
+
+- **CountrySwitcher** v hlavičce (4 kompaktní taby `CZ / SK / GER / AT`), aktivní zvýrazněný. Přepínač vždy vede na root dashboard nové země — i z detail stránky (důvod: kampaň ze CZ nemusí v SK existovat)
+- **Brand v hlavičce** se mění podle země: „Lindström Česko", „Lindström Slovensko" atd.
+- **Badge země+měny** v detailu kampaně vedle Cíl/Status (např. „CZ · CZK")
+- **Empty state**: pokud má země prázdné sheety, zobrazí se centrovaný hlášek místo errorů
+- Odkazy v Timeline na detail mají teď tvar `/<country>/kampan/<slug>` (přes `toSlug()` z názvu kampaně, pokud chybí explicitní slug)
+
+### Měny
+
+- Nový helper `formatMoney(value, currency)` v `lib/format.ts` (Intl `cs-CZ` + CZK pro CZ/SK, `de-DE` + EUR pro GER/AT)
+- `formatCzk` zachován jako tenký alias (`@deprecated`) pro zpětnou kompatibilitu
+- DeploymentsTable formátuje rozpočet **podle měny daného nasazení** (`d.mena`), ne z parent kontextu — to je důležité, kdyby se měna kampaně a nasazení rozcházela
+
+### Generování
+
+- `generateStaticParams` v `app/[country]/page.tsx` pre-renderuje 4 země
+- Detail kampaně je dynamický (ƒ) — jednotlivé slugy se nepre-renderují, řeší se on-demand
+- Cache strategie nezměněna (jeden `cacheTag('sheets')` invaliduje data pro všechny země naráz)
+
+### Co se nezměnilo
+
+- Service account credentials, spreadsheet ID, Vercel env vars
+- Vizuální design (jen přibyl switcher + badge)
+- Endpoint `POST /api/revalidate?secret=...`
+
+### Notes & data warnings odhalené při migraci
+
+- 1 kampaň měla `Země=EN` (zřejmě překlep `GER`) — aplikace ji ignoruje
+- 1 kampaň měla `Měna=SK` místo `CZK` — aplikace ji považuje za neplatnou měnu, dopad: `kampan.mena` je null, fallback na měnu země
+- Několik kampaní mělo prázdné Země/Měna — nezobrazí se na žádném country dashboardu, dokud se nedoplní
+
+---
+
 ## 2026-04-18 — První iterace klientského reviewu
 
 ### Odchylky od původního briefu, které dataset vynutil

@@ -1,4 +1,5 @@
-import { formatCzk } from "@/lib/format";
+import { formatMoney } from "@/lib/format";
+import type { Currency } from "@/types";
 
 const SYSTEM_COLORS: Record<string, string> = {
   "Google Ads": "#378ADD",
@@ -12,9 +13,10 @@ const SYSTEM_COLORS: Record<string, string> = {
 interface BudgetBySystemProps {
   rows: Array<{ system: string; budget: number }>;
   total: number;
+  currency: Currency;
 }
 
-export function BudgetBySystem({ rows, total }: BudgetBySystemProps) {
+export function BudgetBySystem({ rows, total, currency }: BudgetBySystemProps) {
   const max = rows.reduce((m, r) => (r.budget > m ? r.budget : m), 0);
   return (
     <div
@@ -57,7 +59,7 @@ export function BudgetBySystem({ rows, total }: BudgetBySystemProps) {
                   className="text-[14px] text-right flex-shrink-0"
                   style={{ width: 180 }}
                 >
-                  <span className="font-medium">{formatCzk(r.budget)}</span>
+                  <span className="font-medium">{formatMoney(r.budget, currency)}</span>
                   <span
                     className="ml-2 text-[12px]"
                     style={{ color: "var(--foreground-muted)" }}

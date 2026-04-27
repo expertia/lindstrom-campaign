@@ -9,7 +9,10 @@ import type {
   Goal,
   Status,
   BudgetType,
+  Country,
+  Currency,
 } from "@/types";
+import { COUNTRIES, isCountry } from "@/types";
 
 const SHEETS = {
   specialiste: "Specialiste",
@@ -102,6 +105,25 @@ function parseList(raw: CellValue): string[] {
     .filter(Boolean);
 }
 
+function parseCountry(raw: CellValue): Country | null {
+  const v = toStr(raw).trim().toUpperCase();
+  return isCountry(v) ? v : null;
+}
+
+function parseCountries(raw: CellValue): Country[] {
+  const s = toStr(raw);
+  if (!s) return [];
+  return s
+    .split(",")
+    .map((p) => p.trim().toUpperCase())
+    .filter((p): p is Country => (COUNTRIES as readonly string[]).includes(p));
+}
+
+function parseCurrency(raw: CellValue): Currency | null {
+  const v = toStr(raw).trim().toUpperCase();
+  return v === "CZK" || v === "EUR" ? (v as Currency) : null;
+}
+
 function headerIndex(header: Row, names: string[]): number {
   for (const name of names) {
     const idx = header.findIndex((h) => toStr(h).trim() === name);
@@ -127,6 +149,7 @@ function mapSpecialiste(rows: Row[]): Specialista[] {
   const iRole = headerIndex(header, ["Role"]);
   const iEmail = headerIndex(header, ["Email", "E-mail"]);
   const iAktivni = headerIndex(header, ["Aktivní", "Aktivni"]);
+  const iZeme = headerIndex(header, ["Země", "Zeme"]);
   return rows
     .slice(1)
     .filter((r) => cellStr(r, iJmeno))
@@ -135,6 +158,7 @@ function mapSpecialiste(rows: Row[]): Specialista[] {
       role: cellStr(r, iRole),
       email: cellStr(r, iEmail),
       aktivni: parseBoolean(cellRaw(r, iAktivni)),
+      zeme: parseCountries(cellRaw(r, iZeme)),
     }));
 }
 
@@ -151,6 +175,8 @@ function mapKampane(rows: Row[]): Kampan[] {
   const iRozpocet = headerIndex(header, ["Celkový rozpočet", "Celkovy rozpocet"]);
   const iSpec = headerIndex(header, ["Specialista"]);
   const iPoznamka = headerIndex(header, ["Poznámka", "Poznamka"]);
+  const iZeme = headerIndex(header, ["Země", "Zeme"]);
+  const iMena = headerIndex(header, ["Měna", "Mena"]);
 
   return rows
     .slice(1)
@@ -166,6 +192,8 @@ function mapKampane(rows: Row[]): Kampan[] {
       celkovyRozpocet: parseNumber(cellRaw(r, iRozpocet)),
       specialiste: parseList(cellStr(r, iSpec)),
       poznamka: cellStr(r, iPoznamka),
+      zeme: parseCountry(cellRaw(r, iZeme)),
+      mena: parseCurrency(cellRaw(r, iMena)),
     }));
 }
 
@@ -187,6 +215,8 @@ function mapNasazeni(rows: Row[]): Nasazeni[] {
   const iUrl = headerIndex(header, ["URL do systému", "URL do systemu", "URL"]);
   const iStatus = headerIndex(header, ["Status"]);
   const iPoznamka = headerIndex(header, ["Poznámka", "Poznamka"]);
+  const iZeme = headerIndex(header, ["Země", "Zeme"]);
+  const iMena = headerIndex(header, ["Měna", "Mena"]);
 
   return rows
     .slice(1)
@@ -207,6 +237,8 @@ function mapNasazeni(rows: Row[]): Nasazeni[] {
       urlSystemu: cellStr(r, iUrl),
       status: cellStr(r, iStatus) as Status,
       poznamka: cellStr(r, iPoznamka),
+      zeme: parseCountry(cellRaw(r, iZeme)),
+      mena: parseCurrency(cellRaw(r, iMena)),
     }));
 }
 
@@ -220,6 +252,7 @@ function mapKreativy(rows: Row[]): Kreativa[] {
   const iStatus = headerIndex(header, ["Status"]);
   const iNasazeni = headerIndex(header, ["Nasazení", "Nasazeni"]);
   const iPoznamka = headerIndex(header, ["Poznámka", "Poznamka"]);
+  const iZeme = headerIndex(header, ["Země", "Zeme"]);
 
   return rows
     .slice(1)
@@ -229,6 +262,7 @@ function mapKreativy(rows: Row[]): Kreativa[] {
       typ: cellStr(r, iTyp),
       tagy: parseList(cellStr(r, iTagy)),
       url: cellStr(r, iUrl),
+      zeme: parseCountries(cellRaw(r, iZeme)),
       status: cellStr(r, iStatus),
       nasazeni: parseList(cellStr(r, iNasazeni)),
       poznamka: cellStr(r, iPoznamka),

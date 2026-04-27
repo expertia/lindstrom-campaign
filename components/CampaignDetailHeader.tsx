@@ -3,6 +3,23 @@ import { formatDate } from "@/lib/format";
 import { GoalBadge } from "./GoalBadge";
 import { StatusBadge } from "./StatusBadge";
 
+function CountryBadge({ kampan }: { kampan: Kampan }) {
+  if (!kampan.zeme && !kampan.mena) return null;
+  const label = [kampan.zeme, kampan.mena].filter(Boolean).join(" · ");
+  return (
+    <span
+      className="inline-block text-[12px] font-medium rounded-lg"
+      style={{
+        padding: "4px 10px",
+        background: "#F0F0F0",
+        color: "#333333",
+      }}
+    >
+      {label}
+    </span>
+  );
+}
+
 export function CampaignDetailHeader({ kampan }: { kampan: Kampan }) {
   const specLabel = kampan.specialiste.join(", ");
   return (
@@ -24,7 +41,8 @@ export function CampaignDetailHeader({ kampan }: { kampan: Kampan }) {
             <p className="text-[14px] mt-3 max-w-2xl">{kampan.poznamka}</p>
           ) : null}
         </div>
-        <div className="flex gap-2 flex-shrink-0">
+        <div className="flex gap-2 flex-shrink-0 flex-wrap justify-end">
+          <CountryBadge kampan={kampan} />
           <GoalBadge goal={kampan.cil} />
           <StatusBadge status={kampan.status} />
         </div>

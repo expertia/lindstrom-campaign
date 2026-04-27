@@ -1,4 +1,11 @@
-import type { Kampan, Kreativa, Nasazeni, SheetData } from "@/types";
+import type {
+  Country,
+  Kampan,
+  Kreativa,
+  Nasazeni,
+  SheetData,
+} from "@/types";
+import { toSlug } from "@/lib/slug";
 
 function startOfDay(d: Date): Date {
   const n = new Date(d.getTime());
@@ -24,6 +31,31 @@ function monthStart(year: number, month: number): Date {
 function monthEnd(year: number, month: number): Date {
   return new Date(year, month, daysInMonth(year, month), 23, 59, 59, 999);
 }
+
+// --- Country filtering ---
+
+export function filterKampaneByCountry(
+  kampane: Kampan[],
+  country: Country,
+): Kampan[] {
+  return kampane.filter((k) => k.zeme === country);
+}
+
+export function filterNasazeniByCountry(
+  nasazeni: Nasazeni[],
+  country: Country,
+): Nasazeni[] {
+  return nasazeni.filter((n) => n.zeme === country);
+}
+
+export function filterKreativyByCountry(
+  kreativy: Kreativa[],
+  country: Country,
+): Kreativa[] {
+  return kreativy.filter((k) => k.zeme.includes(country));
+}
+
+// --- Deployment math ---
 
 export function getDeploymentDurationDays(d: Nasazeni): number {
   if (!d.start || !d.konec) return 0;
@@ -78,6 +110,8 @@ export function getDeploymentBudgetForMonth(
   return daily * overlap;
 }
 
+// --- Aggregations (all take pre-filtered country-scoped deployments) ---
+
 export function getCurrentMonthBudget(
   deployments: Nasazeni[],
   year: number,
@@ -113,13 +147,13 @@ export function getGoalBudget(
   year: number,
   month: number,
 ): number {
-  const matchingSlugs = new Set(
+  const matchingNames = new Set(
     kampane
       .filter((k) => k.cil === goal || k.cil === "Hybrid")
       .map((k) => k.nazev),
   );
   return deployments
-    .filter((d) => matchingSlugs.has(d.kampan))
+    .filter((d) => matchingNames.has(d.kampan))
     .reduce((sum, d) => sum + getDeploymentBudgetForMonth(d, year, month), 0);
 }
 
@@ -127,25 +161,33 @@ export function getActiveCampaignsCount(kampane: Kampan[]): number {
   return kampane.filter((k) => k.status === "Běží").length;
 }
 
+// --- Per-campaign helpers (used on detail page) ---
+
 export function getDeploymentsForCampaign(
   data: SheetData,
+  country: Country,
   campaignName: string,
 ): Nasazeni[] {
-  return data.nasazeni.filter((n) => n.kampan === campaignName);
+  return data.nasazeni.filter(
+    (n) => n.zeme === country && n.kampan === campaignName,
+  );
 }
 
 export function getCreativesForCampaign(
   data: SheetData,
+  country: Country,
   campaignName: string,
 ): Kreativa[] {
-  const deployments = getDeploymentsForCampaign(data, campaignName);
+  const deployments = getDeploymentsForCampaign(data, country, campaignName);
   const ids = new Set(deployments.flatMap((d) => d.kreativy));
   const byName = new Map(data.kreativy.map((k) => [k.nazev, k]));
   const result: Kreativa[] = [];
   for (const id of ids) {
     const k = byName.get(id);
-    if (k) result.push(k);
-    else if (process.env.NODE_ENV !== "production") {
+    if (k) {
+      // dvojí pojistka: kreativa musí pokrývat danou zemi
+      if (k.zeme.length === 0 || k.zeme.includes(country)) result.push(k);
+    } else if (process.env.NODE_ENV !== "production") {
       console.warn(
         `[data] Kreativa "${id}" referenced from Nasazeni not found in Kreativy sheet`,
       );
@@ -156,9 +198,16 @@ export function getCreativesForCampaign(
 
 export function findCampaignBySlug(
   data: SheetData,
+  country: Country,
   slug: string,
 ): Kampan | null {
-  return data.kampane.find((k) => k.slug === slug) ?? null;
+  return (
+    data.kampane.find((k) => {
+      if (k.zeme !== country) return false;
+      const kSlug = k.slug || toSlug(k.nazev);
+      return kSlug === slug;
+    }) ?? null
+  );
 }
 
 export function getCampaignsInWindow(

@@ -1,13 +1,16 @@
 import Link from "next/link";
-import type { Kampan, Nasazeni } from "@/types";
-import { formatCzk, monthShort } from "@/lib/format";
+import type { Country, Currency, Kampan, Nasazeni } from "@/types";
+import { formatMoney, monthShort } from "@/lib/format";
 import { getCurrentMonthBudget } from "@/lib/data";
+import { toSlug } from "@/lib/slug";
 import { GOAL_COLORS } from "./GoalBadge";
 
 interface TimelineProps {
   kampane: Kampan[];
   nasazeni: Nasazeni[];
   referenceDate: Date;
+  country: Country;
+  currency: Currency;
 }
 
 const LEFT_COL_WIDTH = 220;
@@ -15,7 +18,14 @@ const MONTH_WIDTH = 110;
 const ROW_HEIGHT = 56;
 const HEADER_HEIGHT = 32;
 
-export function Timeline({ kampane, nasazeni, referenceDate }: TimelineProps) {
+export function Timeline({
+  kampane,
+  nasazeni,
+  referenceDate,
+  country,
+  currency,
+}: TimelineProps) {
+  const countryPrefix = `/${country.toLowerCase()}`;
   const systemsByCampaign = new Map<string, string[]>();
   for (const d of nasazeni) {
     if (!d.system) continue;
@@ -151,7 +161,7 @@ export function Timeline({ kampane, nasazeni, referenceDate }: TimelineProps) {
               return (
                 <Link
                   key={k.slug || k.nazev}
-                  href={`/kampan/${k.slug}`}
+                  href={`${countryPrefix}/kampan/${k.slug || toSlug(k.nazev)}`}
                   className="flex border-b hover:bg-[var(--background-muted)] focus:bg-[var(--background-muted)] focus:outline-none"
                   style={{
                     borderColor: "var(--border)",
@@ -224,7 +234,7 @@ export function Timeline({ kampane, nasazeni, referenceDate }: TimelineProps) {
                         : "var(--foreground-muted)",
                     }}
                   >
-                    {budget > 0 ? formatCzk(budget) : "—"}
+                    {budget > 0 ? formatMoney(budget, currency) : "—"}
                   </div>
                 );
               })}

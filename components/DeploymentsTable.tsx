@@ -1,5 +1,5 @@
-import type { Nasazeni } from "@/types";
-import { formatCzk, formatDate } from "@/lib/format";
+import type { Currency, Nasazeni } from "@/types";
+import { formatDate, formatMoney } from "@/lib/format";
 import { StatusBadge } from "./StatusBadge";
 
 const SYSTEM_COLORS: Record<string, string> = {
@@ -13,8 +13,10 @@ const SYSTEM_COLORS: Record<string, string> = {
 
 export function DeploymentsTable({
   deployments,
+  fallbackCurrency,
 }: {
   deployments: Nasazeni[];
+  fallbackCurrency: Currency;
 }) {
   if (deployments.length === 0) {
     return (
@@ -74,7 +76,9 @@ export function DeploymentsTable({
                   <td className="px-3 py-3">{d.id}</td>
                   <td className="px-3 py-3">{d.format}</td>
                   <td className="px-3 py-3 text-right font-medium">
-                    {d.rozpocet != null ? formatCzk(d.rozpocet) : "—"}
+                    {d.rozpocet != null
+                      ? formatMoney(d.rozpocet, d.mena ?? fallbackCurrency)
+                      : "—"}
                   </td>
                   <td
                     className="px-3 py-3"

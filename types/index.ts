@@ -1,3 +1,27 @@
+export type Country = "CZ" | "SK" | "GER" | "AT";
+
+export type Currency = "CZK" | "EUR";
+
+export const COUNTRIES: readonly Country[] = ["CZ", "SK", "GER", "AT"] as const;
+
+export const COUNTRY_LABELS: Record<Country, string> = {
+  CZ: "Česko",
+  SK: "Slovensko",
+  GER: "Německo",
+  AT: "Rakousko",
+};
+
+export const COUNTRY_TO_CURRENCY: Record<Country, Currency> = {
+  CZ: "CZK",
+  SK: "CZK",
+  GER: "EUR",
+  AT: "EUR",
+};
+
+export function isCountry(value: string): value is Country {
+  return (COUNTRIES as readonly string[]).includes(value);
+}
+
 export type Goal = "Brand" | "Lead" | "Hybrid";
 
 export type Status =
@@ -40,6 +64,7 @@ export interface Specialista {
   role: string;
   email: string;
   aktivni: boolean;
+  zeme: Country[];
 }
 
 export interface Kampan {
@@ -53,6 +78,8 @@ export interface Kampan {
   celkovyRozpocet: number | null;
   specialiste: string[];
   poznamka: string;
+  zeme: Country | null;
+  mena: Currency | null;
 }
 
 export interface Nasazeni {
@@ -71,6 +98,8 @@ export interface Nasazeni {
   urlSystemu: string;
   status: Status;
   poznamka: string;
+  zeme: Country | null;
+  mena: Currency | null;
 }
 
 export interface Kreativa {
@@ -81,6 +110,7 @@ export interface Kreativa {
   status: CreativeStatus | string;
   nasazeni: string[];
   poznamka: string;
+  zeme: Country[];
 }
 
 export interface SheetData {
