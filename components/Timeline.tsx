@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Kampan, Nasazeni } from "@/types";
-import { monthShort } from "@/lib/format";
+import { formatCzk, monthShort } from "@/lib/format";
+import { getCurrentMonthBudget } from "@/lib/data";
 import { GOAL_COLORS } from "./GoalBadge";
 
 interface TimelineProps {
@@ -177,22 +178,57 @@ export function Timeline({ kampane, nasazeni, referenceDate }: TimelineProps) {
                     style={{ width: totalWidth, height: ROW_HEIGHT }}
                   >
                     <div
-                      className="absolute top-1/2 -translate-y-1/2 rounded-md flex items-center px-3 text-[12px] text-white"
+                      className="absolute top-1/2 -translate-y-1/2 rounded-md"
                       style={{
                         left,
                         width: Math.max(width, 8),
                         height: 28,
                         background: color,
                       }}
-                    >
-                      {width > 60 ? (
-                        <span className="truncate">{k.nazev}</span>
-                      ) : null}
-                    </div>
+                    />
                   </div>
                 </Link>
               );
             })}
+          </div>
+
+          <div
+            className="flex border-t"
+            style={{ borderColor: "var(--border)" }}
+          >
+            <div
+              className="flex-shrink-0 px-4 py-3 text-[12px]"
+              style={{
+                width: LEFT_COL_WIDTH,
+                color: "var(--foreground-muted)",
+              }}
+            >
+              Investováno
+            </div>
+            <div className="flex" style={{ width: totalWidth }}>
+              {months.map((m, i) => {
+                const budget = getCurrentMonthBudget(nasazeni, m.year, m.month);
+                const isCurrent =
+                  m.year === referenceDate.getFullYear() &&
+                  m.month === referenceDate.getMonth();
+                return (
+                  <div
+                    key={`sum-${m.year}-${m.month}`}
+                    className="text-[12px] px-2 py-3 flex items-center justify-center text-center"
+                    style={{
+                      width: MONTH_WIDTH,
+                      borderLeft: i === 0 ? "none" : "1px solid var(--border)",
+                      fontWeight: isCurrent ? 500 : 400,
+                      color: budget > 0
+                        ? "var(--foreground)"
+                        : "var(--foreground-muted)",
+                    }}
+                  >
+                    {budget > 0 ? formatCzk(budget) : "—"}
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
           <div className="flex items-center gap-4 p-4 text-[12px]">
