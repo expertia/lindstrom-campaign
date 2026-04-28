@@ -6,7 +6,7 @@ Read-only klientský dashboard pro přehled běžících online marketingových 
 
 - **Frontend**: Next.js 16 (App Router, Cache Components) + TypeScript + Tailwind v4
 - **Data**: Google Sheets API v4, 4 sheety (`Specialiste`, `Kampane`, `Nasazeni`, `Kreativy`)
-- **Multi-country**: 4 trhy (CZ, SK, GER, AT), každý s vlastní měnou (CZK / EUR). Data všech trhů jsou v jednom spreadsheetu, rozlišují se sloupcem `Země`
+- **Multi-country**: 4 trhy (CZ → CZK, SK/GER/AT → EUR). Data všech trhů jsou v jednom spreadsheetu, rozlišují se sloupcem `Země`
 - **Cache**: `getAllData()` je označené `'use cache'` + `cacheLife({ revalidate: 300 })` + `cacheTag('sheets')` — server drží data v cache 5 minut
 - **Revalidace na vyžádání**: `POST /api/revalidate?secret=...` okamžitě invaliduje tag `sheets` (pro všechny země naráz)
 
@@ -53,7 +53,7 @@ Jinak se data obnoví automaticky max. do 5 minut.
 | `/cz/kampan/<slug>` | Detail kampaně v CZ (slug + země musí oba sedět) |
 | `/api/revalidate?secret=…` | On-demand invalidace cache |
 
-Neplatná země nebo neexistující slug → 404. Brand v hlavičce („Lindström Česko" / „… Slovensko" / …) a měna ve výpisech (CZK pro CZ/SK, EUR pro GER/AT) se mění podle URL.
+Neplatná země nebo neexistující slug → 404. Brand v hlavičce („Lindström Česko" / „… Slovensko" / …) a měna ve výpisech (CZK pro CZ, EUR pro SK/GER/AT) se mění podle URL.
 
 ## Datová struktura
 

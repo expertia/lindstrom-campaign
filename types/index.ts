@@ -13,7 +13,7 @@ export const COUNTRY_LABELS: Record<Country, string> = {
 
 export const COUNTRY_TO_CURRENCY: Record<Country, Currency> = {
   CZ: "CZK",
-  SK: "CZK",
+  SK: "EUR",
   GER: "EUR",
   AT: "EUR",
 };

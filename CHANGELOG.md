@@ -2,6 +2,17 @@
 
 Chronologický přehled změn projektu. Nejnovější nahoře.
 
+## 2026-04-28 — Fix: SK má měnu EUR, ne CZK
+
+Slovensko používá euro, brief měl chybný mapping `SK → CZK`.
+Opraveno v `COUNTRY_TO_CURRENCY` v `types/index.ts`.
+
+**Dopad pro data v sheetu:** všechny řádky s `Země=SK` by měly mít
+`Měna=EUR`. Pokud zůstanou `Měna=CZK`, parser je vyhodí jako null
+(neshoda s validním mapováním), aplikace pak fallbackuje na měnu
+země (= EUR), takže formátování bude správně, ale data jsou
+nekonzistentní. Doporučeno opravit v sheetu.
+
 ## 2026-04-27 — Multi-country support (CZ, SK, GER, AT)
 
 ### Routing — breaking change
