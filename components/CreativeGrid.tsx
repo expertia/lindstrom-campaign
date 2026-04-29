@@ -1,20 +1,65 @@
 import type { Kreativa } from "@/types";
+import { driveThumbnailUrl, extractDriveFileId, isDriveUrl } from "@/lib/drive";
 
 function isImageUrl(url: string): boolean {
   return /\.(jpe?g|png|gif|webp|avif|svg)(\?.*)?$/i.test(url);
 }
 
+function PlayOverlay() {
+  return (
+    <div
+      aria-hidden
+      className="absolute inset-0 flex items-center justify-center pointer-events-none"
+    >
+      <div
+        className="rounded-full flex items-center justify-center"
+        style={{
+          width: 40,
+          height: 40,
+          background: "rgba(0, 0, 0, 0.55)",
+          color: "white",
+        }}
+      >
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 14 14"
+          fill="currentColor"
+          style={{ marginLeft: 2 }}
+        >
+          <path d="M2 1.5v11l10-5.5z" />
+        </svg>
+      </div>
+    </div>
+  );
+}
+
 function CreativeThumb({ creative }: { creative: Kreativa }) {
-  if (creative.url && isImageUrl(creative.url)) {
+  const driveId = extractDriveFileId(creative.url);
+  const isVideo = creative.typ === "Video";
+
+  let thumbSrc: string | null = null;
+  if (driveId) {
+    thumbSrc = driveThumbnailUrl(driveId, 800);
+  } else if (creative.url && isImageUrl(creative.url) && !isDriveUrl(creative.url)) {
+    thumbSrc = creative.url;
+  }
+
+  if (thumbSrc) {
     return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        src={creative.url}
-        alt={creative.nazev}
-        className="w-full h-32 object-cover rounded-md"
-      />
+      <div className="relative">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={thumbSrc}
+          alt={creative.nazev}
+          className="w-full h-32 object-cover rounded-md"
+          style={{ background: "var(--background-muted)" }}
+        />
+        {isVideo ? <PlayOverlay /> : null}
+      </div>
     );
   }
+
   return (
     <div
       className="w-full h-32 rounded-md flex items-center justify-center text-[12px]"
