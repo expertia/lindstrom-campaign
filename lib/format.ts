@@ -66,6 +66,18 @@ export function formatDate(d: Date | null): string {
   return `${d.getDate()}. ${d.getMonth() + 1}. ${d.getFullYear()}`;
 }
 
+/** Krátké zobrazení rozsahu dat. Rok se ukáže, jen pokud se začátek a konec liší rokem. */
+export function formatDateRangeShort(start: Date, end: Date): string {
+  const sy = start.getFullYear();
+  const ey = end.getFullYear();
+  const startStr =
+    sy === ey
+      ? `${start.getDate()}. ${start.getMonth() + 1}.`
+      : `${start.getDate()}. ${start.getMonth() + 1}. ${sy}`;
+  const endStr = `${end.getDate()}. ${end.getMonth() + 1}. ${ey}`;
+  return `${startStr} – ${endStr}`;
+}
+
 export function monthShort(month: number): string {
   return MONTHS_SHORT[month] ?? "";
 }

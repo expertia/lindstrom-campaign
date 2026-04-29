@@ -236,3 +236,46 @@ export function getCampaignBudget(
     .filter((d) => d.kampan === campaignName)
     .reduce((sum, d) => sum + (d.rozpocet ?? 0), 0);
 }
+
+/**
+ * Sloučí překrývající se / dotýkající se intervaly nasazení do jednoho segmentu.
+ * Vrací segmenty seřazené podle startu, každý se seznamem ID nasazení, která
+ * do něj přispěla.
+ */
+export interface DeploymentSegment {
+  startMs: number;
+  endMs: number;
+  deploymentIds: string[];
+}
+
+export function mergeDeploymentSegments(
+  deployments: Nasazeni[],
+): DeploymentSegment[] {
+  const valid = deployments
+    .filter((d): d is Nasazeni & { start: Date; konec: Date } =>
+      Boolean(d.start && d.konec),
+    )
+    .map((d) => ({
+      start: d.start.getTime(),
+      end: d.konec.getTime(),
+      id: d.id,
+    }))
+    .filter((d) => d.end >= d.start)
+    .sort((a, b) => a.start - b.start);
+
+  const segments: DeploymentSegment[] = [];
+  for (const d of valid) {
+    const last = segments[segments.length - 1];
+    if (last && d.start <= last.endMs) {
+      last.endMs = Math.max(last.endMs, d.end);
+      last.deploymentIds.push(d.id);
+    } else {
+      segments.push({
+        startMs: d.start,
+        endMs: d.end,
+        deploymentIds: [d.id],
+      });
+    }
+  }
+  return segments;
+}

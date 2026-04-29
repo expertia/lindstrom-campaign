@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Country, Currency, Kampan, Nasazeni } from "@/types";
-import { formatMoney, monthShort } from "@/lib/format";
-import { getCurrentMonthBudget } from "@/lib/data";
+import { formatDateRangeShort, formatMoney, monthShort } from "@/lib/format";
+import { getCurrentMonthBudget, mergeDeploymentSegments } from "@/lib/data";
 import { toSlug } from "@/lib/slug";
 import { GOAL_COLORS } from "./GoalBadge";
 
@@ -59,13 +59,21 @@ export function Timeline({
   const windowDurationMs = windowEndMs - windowStartMs;
   const totalWidth = months.length * MONTH_WIDTH;
 
-  const visible = kampane.filter(
-    (k) =>
-      k.start &&
-      k.konec &&
-      k.start.getTime() <= windowEndMs &&
-      k.konec.getTime() >= windowStartMs,
+  // Pruhy se odvozují z nasazení (sloučená překrývající se období),
+  // ne z Kampaň.Start/Konec.
+  const segmentsByCampaign = new Map(
+    kampane.map((k) => [
+      k.nazev,
+      mergeDeploymentSegments(nasazeni.filter((n) => n.kampan === k.nazev)),
+    ]),
   );
+
+  const visible = kampane.filter((k) => {
+    const segs = segmentsByCampaign.get(k.nazev) ?? [];
+    return segs.some(
+      (s) => s.startMs <= windowEndMs && s.endMs >= windowStartMs,
+    );
+  });
 
   const todayMs = referenceDate.getTime();
   const todayOffset =
@@ -150,18 +158,10 @@ export function Timeline({
             ) : null}
 
             {visible.map((k) => {
-              const start = k.start!;
-              const konec = k.konec!;
-              const clampedStart = Math.max(start.getTime(), windowStartMs);
-              const clampedEnd = Math.min(konec.getTime(), windowEndMs);
-              const left =
-                ((clampedStart - windowStartMs) / windowDurationMs) *
-                totalWidth;
-              const width =
-                ((clampedEnd - clampedStart) / windowDurationMs) * totalWidth;
               const color = GOAL_COLORS[k.cil] ?? "#888";
               const systems = systemsByCampaign.get(k.nazev) ?? [];
               const systemsLabel = systems.join(", ");
+              const segments = segmentsByCampaign.get(k.nazev) ?? [];
               return (
                 <Link
                   key={k.slug || k.nazev}
@@ -197,15 +197,60 @@ export function Timeline({
                     className="relative group-hover:bg-[var(--background-muted)] group-focus:bg-[var(--background-muted)]"
                     style={{ width: totalWidth, height: ROW_HEIGHT }}
                   >
-                    <div
-                      className="absolute top-1/2 -translate-y-1/2 rounded-md"
-                      style={{
-                        left,
-                        width: Math.max(width, 8),
-                        height: 28,
-                        background: color,
-                      }}
-                    />
+                    {segments.map((seg, i) => {
+                      if (
+                        seg.endMs < windowStartMs ||
+                        seg.startMs > windowEndMs
+                      )
+                        return null;
+                      const clampedStart = Math.max(seg.startMs, windowStartMs);
+                      const clampedEnd = Math.min(seg.endMs, windowEndMs);
+                      const left =
+                        ((clampedStart - windowStartMs) / windowDurationMs) *
+                        totalWidth;
+                      const width =
+                        ((clampedEnd - clampedStart) / windowDurationMs) *
+                        totalWidth;
+                      const displayWidth = Math.max(width, 8);
+                      const showText = displayWidth >= 60;
+                      const idLabel = seg.deploymentIds.join(", ");
+                      const dateRange = formatDateRangeShort(
+                        new Date(seg.startMs),
+                        new Date(seg.endMs),
+                      );
+                      return (
+                        <div
+                          key={i}
+                          className="absolute top-1/2 -translate-y-1/2 rounded-md flex flex-col justify-center overflow-hidden"
+                          style={{
+                            left,
+                            width: displayWidth,
+                            height: 36,
+                            background: color,
+                            color: "white",
+                            padding: "0 8px",
+                          }}
+                          title={`${idLabel} · ${dateRange}`}
+                        >
+                          {showText ? (
+                            <>
+                              <div
+                                className="text-[11px] font-medium truncate"
+                                style={{ lineHeight: 1.2 }}
+                              >
+                                {idLabel}
+                              </div>
+                              <div
+                                className="text-[10px] truncate"
+                                style={{ lineHeight: 1.2, opacity: 0.9 }}
+                              >
+                                {dateRange}
+                              </div>
+                            </>
+                          ) : null}
+                        </div>
+                      );
+                    })}
                   </div>
                 </Link>
               );
