@@ -33,15 +33,14 @@ export function Timeline({
     if (!list.includes(d.system)) list.push(d.system);
     systemsByCampaign.set(d.kampan, list);
   }
-  const monthsBefore = 6;
-  const monthsAfter = 6;
+  // Okno kotvené na leden aktuálního roku, 13 měsíců dopředu
+  // (např. v 2026 ukazuje Leden 2026 → Leden 2027; v 2027 se přesune o rok dál).
+  const TOTAL_MONTHS = 13;
+  const startYear = referenceDate.getFullYear();
+  const startMonth = 0; // leden
   const months: { year: number; month: number }[] = [];
-  for (let offset = -monthsBefore; offset <= monthsAfter; offset++) {
-    const d = new Date(
-      referenceDate.getFullYear(),
-      referenceDate.getMonth() + offset,
-      1,
-    );
+  for (let i = 0; i < TOTAL_MONTHS; i++) {
+    const d = new Date(startYear, startMonth + i, 1);
     months.push({ year: d.getFullYear(), month: d.getMonth() });
   }
   const windowStart = new Date(months[0].year, months[0].month, 1);
