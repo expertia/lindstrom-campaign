@@ -180,16 +180,26 @@ export function getCreativesForCampaign(
 ): Kreativa[] {
   const deployments = getDeploymentsForCampaign(data, country, campaignName);
   const ids = new Set(deployments.flatMap((d) => d.kreativy));
-  const byName = new Map(data.kreativy.map((k) => [k.nazev, k]));
+
+  // Nejdřív omezit kreativy na danou zemi (multi-value zeme), pak dedupe podle
+  // názvu — bere se první výskyt (ne poslední), aby duplicitní řádky bez URL
+  // nepřebily ten s URL.
+  const countryKreativy = data.kreativy.filter(
+    (k) => k.zeme.length === 0 || k.zeme.includes(country),
+  );
+  const byName = new Map<string, Kreativa>();
+  for (const k of countryKreativy) {
+    if (!byName.has(k.nazev)) byName.set(k.nazev, k);
+  }
+
   const result: Kreativa[] = [];
   for (const id of ids) {
     const k = byName.get(id);
     if (k) {
-      // dvojí pojistka: kreativa musí pokrývat danou zemi
-      if (k.zeme.length === 0 || k.zeme.includes(country)) result.push(k);
+      result.push(k);
     } else if (process.env.NODE_ENV !== "production") {
       console.warn(
-        `[data] Kreativa "${id}" referenced from Nasazeni not found in Kreativy sheet`,
+        `[data] Kreativa "${id}" referenced from Nasazeni not found in Kreativy sheet (country: ${country})`,
       );
     }
   }
