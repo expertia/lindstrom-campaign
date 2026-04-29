@@ -33,8 +33,8 @@ export function Timeline({
     if (!list.includes(d.system)) list.push(d.system);
     systemsByCampaign.set(d.kampan, list);
   }
-  const monthsBefore = 3;
-  const monthsAfter = 3;
+  const monthsBefore = 6;
+  const monthsAfter = 6;
   const months: { year: number; month: number }[] = [];
   for (let offset = -monthsBefore; offset <= monthsAfter; offset++) {
     const d = new Date(
@@ -93,6 +93,11 @@ export function Timeline({
               style={{
                 width: LEFT_COL_WIDTH,
                 color: "var(--foreground-muted)",
+                position: "sticky",
+                left: 0,
+                background: "white",
+                borderRight: "1px solid var(--border)",
+                zIndex: 2,
               }}
             >
               Kampaň
@@ -162,15 +167,21 @@ export function Timeline({
                 <Link
                   key={k.slug || k.nazev}
                   href={`${countryPrefix}/kampan/${k.slug || toSlug(k.nazev)}`}
-                  className="flex border-b hover:bg-[var(--background-muted)] focus:bg-[var(--background-muted)] focus:outline-none"
+                  className="group flex border-b focus:outline-none"
                   style={{
                     borderColor: "var(--border)",
                     height: ROW_HEIGHT,
                   }}
                 >
                   <div
-                    className="flex-shrink-0 px-4 flex flex-col justify-center"
-                    style={{ width: LEFT_COL_WIDTH }}
+                    className="flex-shrink-0 px-4 flex flex-col justify-center bg-white group-hover:bg-[var(--background-muted)] group-focus:bg-[var(--background-muted)]"
+                    style={{
+                      width: LEFT_COL_WIDTH,
+                      position: "sticky",
+                      left: 0,
+                      borderRight: "1px solid var(--border)",
+                      zIndex: 2,
+                    }}
                   >
                     <div className="text-[14px] font-medium truncate">
                       {k.nazev}
@@ -184,7 +195,7 @@ export function Timeline({
                     </div>
                   </div>
                   <div
-                    className="relative"
+                    className="relative group-hover:bg-[var(--background-muted)] group-focus:bg-[var(--background-muted)]"
                     style={{ width: totalWidth, height: ROW_HEIGHT }}
                   >
                     <div
@@ -211,6 +222,11 @@ export function Timeline({
               style={{
                 width: LEFT_COL_WIDTH,
                 color: "var(--foreground-muted)",
+                position: "sticky",
+                left: 0,
+                background: "white",
+                borderRight: "1px solid var(--border)",
+                zIndex: 2,
               }}
             >
               Investováno
