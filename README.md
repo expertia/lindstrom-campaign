@@ -62,9 +62,11 @@ Viz `/brief_claude_code.md` + `/dodatek_zeme.md` v rodičovské složce. Zkráce
 - **Specialiste** — Jméno, Role, Email, Aktivní, **Země** (multi-value, např. `CZ, SK`)
 - **Kampane** — Kampaň, **Země** (single: CZ/SK/GER/AT), Slug (`ID slub`), **Měna** (CZK/EUR), Produkt, Cíl, Status, Start, Konec, Celkový rozpočet, Specialista, Poznámka
 - **Nasazeni_v_systemech** — ID nasazení, **Země**, **Měna**, Kampaň (FK), Systém, Formát, Rozpočet, Typ rozpočtu, Start, Konec, Specialista, Kreativy, Landing page, Targeting, URL do systému, Status, Poznámka
-- **Kreativy** — Kreativa, **Země** (multi-value), Typ, Tagy, URL, Status, Nasazení, Poznámka
+- **Kreativy** — Kreativa, **Země** (multi-value), Typ, Tagy, URL (Drive link), **Youtube URL** (volitelné), Status, Nasazení, Poznámka
 
 > **Source of truth** pro vazbu nasazení ↔ kreativy je `Nasazeni.Kreativy`. Sloupec `Kreativy.Nasazení` aplikace při čtení ignoruje (při nekonzistenci jen warning v konzoli).
+
+> **Náhledy kreativ**: pokud `Kreativy.URL` ukazuje na Google Drive (`/file/d/<ID>/view`), aplikace vykreslí statický thumbnail přes Drive thumbnail API. Soubor v Drive musí být sdílen **„Kdokoli s odkazem"**, jinak Drive vrátí 403. Pro `Typ = Video` se nad thumbnail zobrazí play overlay. Pokud je vyplněn `Youtube URL`, vedle „Otevřít v Disku" se zobrazí druhý odkaz „YouTube".
 
 > **Validační pravidlo (lidské)**: v kampani musí Země a Měna spolu sedět (CZ/SK→CZK, GER/AT→EUR). Aplikace na to nehlídá; pokud rozcházejí, formátování čísel může vypadat divně.
 
@@ -86,12 +88,22 @@ components/
   StatusBadge, GoalBadge
 lib/
   sheets.ts                           # Google Sheets client + parser (Země/Měna whitelist)
-  data.ts                             # výpočty + filterKampaneByCountry, filterNasazeniByCountry, …
+  data.ts                             # výpočty + filterKampaneByCountry, mergeDeploymentSegments, …
+  drive.ts                            # parser Drive URL → file ID + thumbnail URL
   slug.ts                             # URL slug helper
-  format.ts                           # formatMoney(value, currency), data, měsíce CZ
+  format.ts                           # formatMoney(value, currency), formatDateRangeShort, …
 types/
   index.ts                            # Country/Currency typy + COUNTRY_TO_CURRENCY mapa
 ```
+
+## Timeline (gantt přehled)
+
+- **Okno**: 13 měsíců, kotvené na **leden aktuálního roku** (Leden 2026 → Leden 2027 v roce 2026; v roce 2027 se posune o rok dál)
+- **Pruhy** se derivují z `Nasazeni_v_systemech.Start/Konec`, ne z `Kampaň.Start/Konec`. Kampaň se 3 fázemi v roce má 3 oddělené pruhy v jednom řádku
+- **Sloučení**: nasazení s překrývajícími se / dotýkajícími se intervaly se v rámci jedné kampaně sloučí do jednoho souvislého pruhu (`mergeDeploymentSegments`); nesouvislé fáze zůstávají oddělené
+- **Text v pruhu**: `ID nasazení` (top) + `dd. mm. – dd. mm.` (bottom). Pokud sloučí víc nasazení, ID jsou čárkou oddělená. Pruh užší než ~60 px text neukáže (full info v `title` atributu)
+- **Levý sloupec** je `position: sticky` — drží se v zorném poli při horizontálním scrollu
+- **Footer „Investováno"** sčítá proporcionální měsíční rozpočet pro každý ze 13 měsíců (sticky label vlevo)
 
 ## Výpočet měsíčního rozpočtu
 
