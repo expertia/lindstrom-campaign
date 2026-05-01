@@ -108,17 +108,30 @@ export function CreativeGrid({ creatives }: { creatives: Kreativa[] }) {
                 {c.typ}
                 {c.status ? ` · ${c.status}` : ""}
               </div>
-              {c.url ? (
-                <a
-                  href={c.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[12px] underline mt-2 inline-block"
-                  style={{ color: "var(--foreground-muted)" }}
-                >
-                  Otevřít v Disku
-                </a>
-              ) : null}
+              <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">
+                {c.url ? (
+                  <a
+                    href={c.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[12px] underline"
+                    style={{ color: "var(--foreground-muted)" }}
+                  >
+                    Otevřít v Disku
+                  </a>
+                ) : null}
+                {c.youtubeUrl ? (
+                  <a
+                    href={c.youtubeUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[12px] underline"
+                    style={{ color: "var(--foreground-muted)" }}
+                  >
+                    YouTube
+                  </a>
+                ) : null}
+              </div>
             </div>
           </div>
         ))}

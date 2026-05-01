@@ -249,6 +249,12 @@ function mapKreativy(rows: Row[]): Kreativa[] {
   const iTyp = headerIndex(header, ["Typ"]);
   const iTagy = headerIndex(header, ["Tagy"]);
   const iUrl = headerIndex(header, ["URL"]);
+  const iYoutube = headerIndex(header, [
+    "Youtube URL",
+    "YouTube URL",
+    "Youtube",
+    "YouTube",
+  ]);
   const iStatus = headerIndex(header, ["Status"]);
   const iNasazeni = headerIndex(header, ["Nasazení", "Nasazeni"]);
   const iPoznamka = headerIndex(header, ["Poznámka", "Poznamka"]);
@@ -262,6 +268,7 @@ function mapKreativy(rows: Row[]): Kreativa[] {
       typ: cellStr(r, iTyp),
       tagy: parseList(cellStr(r, iTagy)),
       url: cellStr(r, iUrl),
+      youtubeUrl: cellStr(r, iYoutube),
       zeme: parseCountries(cellRaw(r, iZeme)),
       status: cellStr(r, iStatus),
       nasazeni: parseList(cellStr(r, iNasazeni)),

@@ -107,6 +107,7 @@ export interface Kreativa {
   typ: CreativeType | string;
   tagy: string[];
   url: string;
+  youtubeUrl: string;
   status: CreativeStatus | string;
   nasazeni: string[];
   poznamka: string;
